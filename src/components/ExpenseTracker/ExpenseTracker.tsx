@@ -7,32 +7,34 @@ import { StatisticsCircle } from "../StatisticsCircle/StatisticsCircle.tsx";
 
 import './index.css';
 
+export interface ICategoryPercentage {
+    category: string;
+    percentage: number;
+}
+
+export function updatedCategoryPercentages(expenses: IExpense[], totalCost: number, expensesStatsByCategories: ICategoryPercentage[]): ICategoryPercentage[] {
+    const categoryTotals: ICategoryPercentage[] = expensesStatsByCategories.map(category => ({...category}));
+
+    expenses.forEach((expense: IExpense) => {
+        const index = categoryTotals.findIndex(obj => obj.category === expense.category);
+        if (index !== -1) {
+            categoryTotals[index] = {
+                ...categoryTotals[index],
+                percentage: categoryTotals[index].percentage + (expense.cost / totalCost * 100)
+            };
+        }
+    });
+    return categoryTotals;
+}
+
+function updatedTotalCost(newExpenses: IExpense[]): number {
+    return newExpenses.reduce((total: number, expense: IExpense): number => total + expense.cost, 0)
+}
+
 export const ExpenseTracker: React.FC = () => {
 
     const openModal: () => void = (): void => setIsModalOpen(true);
     const closeModal: () => void = (): void => setIsModalOpen(false);
-
-
-    interface ICategoryPercentage {
-        category: string;
-        percentage: number;
-    }
-
-    function updatedCategoryPercentages(expenses: IExpense[], totalCost: number, expensesStatsByCategories: ICategoryPercentage[]): ICategoryPercentage[] {
-
-        const categoryTotals: ICategoryPercentage[] = expensesStatsByCategories.map(category => ({...category}));
-
-        expenses.forEach((expense) => {
-            const index = categoryTotals.findIndex(obj => obj.category === expense.category);
-            if (index !== -1) {
-                categoryTotals[index] = {
-                    ...categoryTotals[index],
-                    percentage: categoryTotals[index].percentage + (expense.cost / totalCost * 100)
-                };
-            }
-        });
-        return categoryTotals;
-    }
 
     const [expensesList, setExpensesList] = useState<IExpense[]>([]); //Состояние списка расходов
     const [error, setError] = useState<string | null>(null); // Для отображения ошибок
@@ -40,29 +42,41 @@ export const ExpenseTracker: React.FC = () => {
     const [totalCost, setTotalCost] = useState<number>(0); //Общая сумма расходов
     const [isModalOpen, setIsModalOpen] = useState(false); //Для модального окна
     const [expensesStatsByCategories, setExpensesStatsByCategories] = useState<{category: string, percentage: number}[]>
-    ([{category: 'здоровье', percentage: 0}, {category: 'еда', percentage: 0}, {category: 'образование', percentage: 0}, {category: 'развлечения', percentage: 0}]);
+      ([{category: 'здоровье', percentage: 0},
+        {category: 'еда', percentage: 0},
+        {category: 'образование', percentage: 0},
+        {category: 'развлечения', percentage: 0}]);
+
 
     useEffect((): void => {
-        (async (): Promise<void> => {
-            try {
-                const fetchedExpenses: IExpense[] | null = await getExpenses();
+        getExpenses()
+            .then(fetchedExpenses => {
                 if (fetchedExpenses != null) {
                     setExpensesList(fetchedExpenses);
-                    setTotalCost(fetchedExpenses.reduce((total: number, expense: IExpense): number => total + expense.cost, 0));
-
-                    setExpensesStatsByCategories(updatedCategoryPercentages(expensesList, totalCost, expensesStatsByCategories));
+                    setTotalCost(updatedTotalCost(fetchedExpenses));
                 } else {
                     setError("Не удалось загрузить расходы.");
                 }
-            }
-            catch (error) {
+            })
+            .catch(error => {
                 setError('Ошибка при загрузке расходов: ' + (error instanceof Error ? error.message : String(error)));
-            }
-            finally {
+            })
+            .finally(() => {
                 setLoading(false);
-            }
-        })();
-    }, []);
+            });
+    });
+
+    useEffect(() => {
+        console.log('текущий список');
+        console.log(expensesList);
+        setTotalCost(updatedTotalCost(expensesList))
+    }, [expensesList]);
+
+    useEffect(() => {
+        setExpensesStatsByCategories(updatedCategoryPercentages(expensesList, totalCost, expensesStatsByCategories));
+        console.log('текущий список');
+        console.log(expensesList);
+    }, [totalCost]);
 
 
     if (loading) {
@@ -108,8 +122,7 @@ export const ExpenseTracker: React.FC = () => {
             <div className="expense-tracker">
                 {expensesList.map((expense: IExpense) => (
                     <Expense {...expense} key={expense.title}
-                             expensesList={expensesList} setExpensesList={setExpensesList}
-                             totalCost={totalCost} setTotalCost={setTotalCost}/>
+                             expensesList={expensesList} setExpensesList={setExpensesList}/>
                 ))}
             </div>
         </div>

@@ -1,6 +1,6 @@
 import './index.css';
 
-export const StatisticsCircle =  ({ data, size = 100  }) => {
+export const StatisticsCircle =  ({ data, size = 200  }) => {
 
     let cumulativePercent = 0;
 
