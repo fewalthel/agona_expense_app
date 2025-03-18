@@ -66,13 +66,13 @@ export const ExpenseTracker: React.FC = () => {
             });
     });
 
-    useEffect(() => {
+    useEffect((): void => {
         console.log('текущий список');
         console.log(expensesList);
         setTotalCost(updatedTotalCost(expensesList))
     }, [expensesList]);
 
-    useEffect(() => {
+    useEffect((): void => {
         setExpensesStatsByCategories(updatedCategoryPercentages(expensesList, totalCost, expensesStatsByCategories));
         console.log('текущий список');
         console.log(expensesList);

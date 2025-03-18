@@ -13,19 +13,8 @@ export const Expense: React.FC <IExpenseProps> = ({title, cost, date, category, 
         event.preventDefault();
 
         const titleOfRemoveExpense: string = event.currentTarget.value;
-        const newExpenses: IExpense[] = [];
-
-        expensesList.forEach((expense: IExpense) => {
-            if (expense.title != titleOfRemoveExpense) {
-                newExpenses.push(expense);
-            }
-        })
-
-        console.log('старый список');
-        console.log(expensesList);
+        const newExpenses: IExpense[] = expensesList.filter((expense: IExpense) => expense.title !== titleOfRemoveExpense);
         setExpensesList(newExpenses);
-        console.log('новый список');
-        console.log(newExpenses);
     }
 
    return (
