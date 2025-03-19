@@ -47,7 +47,6 @@ export const ExpenseTracker: React.FC = () => {
         {category: 'образование', percentage: 0},
         {category: 'развлечения', percentage: 0}]);
 
-
     useEffect((): void => {
         getExpenses()
             .then(fetchedExpenses => {
